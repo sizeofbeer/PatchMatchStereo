@@ -7,40 +7,49 @@
 #pragma once
 #include "pms_types.h"
 
+
 namespace pms_util
 {
-
 	/**
-	* \brief »ñÈ¡ÏñËØ(i,j)µÄÑÕÉ«Öµ
-	* \param img_data	ÑÕÉ«Êı×é
-	* \param width		Ó°Ïñ¿í
-	* \param height		Ó°Ïñ¸ß
-	* \param i			ÏñËØĞĞ×ø±ê
-	* \param j			ÏñËØÁĞ×ø±ê
-	* \return ÏñËØ(i,j)µÄÑÕÉ«Öµ
+	* @brief è·å–åƒç´ (i,j)çš„é¢œè‰²å€¼
+	* @param img_data	é¢œè‰²æ•°ç»„
+	* @param width		å›¾åƒå®½
+	* @param height		å›¾åƒé«˜
+	* @param i			åƒç´ è¡Œåæ ‡
+	* @param j			åƒç´ åˆ—åæ ‡
+	* @return PColor	åƒç´ (i,j)çš„é¢œè‰²å€¼
 	*/
-	PColor GetColor(const uint8* img_data, const sint32& width, const sint32& height, const sint32& i,const sint32& j);
+	PColor GetColor(const uint8* img_data,
+					const sint32& width, const sint32& height,
+					const sint32& i,const sint32& j);
 
 	/**
-	 * \brief ÖĞÖµÂË²¨
-	 * \param in				ÊäÈë£¬Ô´Êı¾İ
-	 * \param out				Êä³ö£¬Ä¿±êÊı¾İ
-	 * \param width				ÊäÈë£¬¿í¶È
-	 * \param height			ÊäÈë£¬¸ß¶È
-	 * \param wnd_size			ÊäÈë£¬´°¿Ú¿í¶È
+	 * @brief ä¸­å€¼æ»¤æ³¢
+	 * @param in			è¾“å…¥, æºæ•°æ®
+	 * @param out			è¾“å‡º, ç›®æ ‡æ•°æ®
+	 * @param width			è¾“å…¥, å®½åº¦
+	 * @param height		è¾“å…¥, é«˜åº¦
+	 * @param wnd_size		è¾“å…¥, çª—å£å®½åº¦
 	 */
-	void MedianFilter(const float32* in, float32* out, const sint32& width, const sint32& height, const sint32 wnd_size);
+	void MedianFilter(const float32* in,
+					  float32* out,
+					  const sint32& width, const sint32& height,
+					  const sint32 wnd_size);
 
 	/**
-	 * \brief ¼ÓÈ¨ÖĞÖµÂË²¨
-	 * \param img_data		ÑÕÉ«Êı×é
-	 * \param width			Ó°Ïñ¿í
-	 * \param height		Ó°Ïñ¸ß
-	 * \param wnd_size		´°¿Ú´óĞ¡
-	 * \param gamma			gammaÖµ
-	 * \param filter_pixels ĞèÒªÂË²¨µÄÏñËØ¼¯
-	 * \param disparity_map ÊÓ²îÍ¼
+	 * @brief åŠ æƒä¸­å€¼æ»¤æ³¢
+	 * @param img_data		é¢œè‰²æ•°ç»„
+	 * @param width			å›¾åƒå®½
+	 * @param height		å›¾åƒé«˜
+	 * @param wnd_size		çª—å£å¤§å°
+	 * @param gamma			gammaå€¼
+	 * @param filter_pixels éœ€è¦æ»¤æ³¢çš„åƒç´ é›†
+	 * @param disparity_map è§†å·®å›¾
 	 */
-	void WeightedMedianFilter(const uint8* img_data, const sint32& width, const sint32& height, const sint32& wnd_size, const float32& gamma,const vector<pair<int, int>>& filter_pixels, float32* disparity_map);
-
+	void WeightedMedianFilter(const uint8* img_data,
+							  const sint32& width, const sint32& height,
+							  const sint32& wnd_size,
+							  const float32& gamma,
+							  const vector<pair<int, int>>& filter_pixels,
+							  float32* disparity_map);
 }

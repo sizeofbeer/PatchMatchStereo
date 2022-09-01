@@ -7,89 +7,97 @@
 #ifndef PATCH_MATCH_STEREO_PROPAGATION_H_
 #define PATCH_MATCH_STEREO_PROPAGATION_H_
 #include "pms_types.h"
-
 #include "cost_computor.hpp"
 #include <random>
 
+
 /**
- * \brief ´«²¥Àà
+ * @brief ä¼ æ’­ç±»
+ * final ç¦æ­¢è¢«ç»§æ‰¿
  */
 class PMSPropagation final{
 public:
+	/**
+	 * @brief PMSPropagationå¸¦å‚æ•°æ„é€ æ–¹æ³•
+	 * @param width 			å›¾åƒå®½
+	 * @param height 			å›¾åƒé«˜
+	 * @param img_left 			å·¦å›¾åƒæ•°æ®
+	 * @param img_right 		å³å›¾åƒæ•°æ®
+	 * @param grad_left 		å·¦å›¾åƒæ¢¯åº¦æ•°æ®
+	 * @param grad_right 		å³å›¾åƒæ¢¯åº¦æ•°æ®
+	 * @param plane_left 		å·¦å›¾åƒå¹³é¢æ•°æ®
+	 * @param plane_right 		å³å›¾åƒå¹³é¢æ•°æ®
+	 * @param option 			PMSç®—æ³•å‚æ•°
+	 * @param cost_left 		å·¦å›¾åƒä»£ä»·æ•°æ®
+	 * @param cost_right 		å³å›¾åƒä»£ä»·æ•°æ®
+	 * @param disparity_map 	è§†å·®æ•°æ®
+	 */
 	PMSPropagation(const sint32 width, const sint32 height,
-		const uint8* img_left, const uint8* img_right,
-		const PGradient* grad_left, const PGradient* grad_right,
-		DisparityPlane* plane_left, DisparityPlane* plane_right,
-		const PMSOption& option,
-		float32* cost_left, float32* cost_right,
-		float32* disparity_map);
+					const uint8* img_left, const uint8* img_right,
+					const PGradient* grad_left, const PGradient* grad_right,
+					DisparityPlane* plane_left, DisparityPlane* plane_right,
+					const PMSOption& option,
+					float32* cost_left, float32* cost_right,
+					float32* disparity_map);
 
 	~PMSPropagation();
 
 public:
-	/** \brief Ö´ĞĞ´«²¥Ò»´Î */
+	// æ‰§è¡Œä¼ æ’­ä¸€æ¬¡
 	void DoPropagation();
 
 private:
-	/** \brief ¼ÆËã´ú¼ÛÊı¾İ */
+	// è®¡ç®—ä»£ä»·æ•°æ®
 	void ComputeCostData() const;
 
 	/**
-	 * \brief ¿Õ¼ä´«²¥
-	 * \param x ÏñËØx×ø±ê
-	 * \param y ÏñËØy×ø±ê
-	 * \param direction ´«²¥·½Ïò
+	 * @brief ç©ºé—´ä¼ æ’­
+	 * @param x åƒç´ xåæ ‡
+	 * @param y åƒç´ yåæ ‡
+	 * @param direction ä¼ æ’­æ–¹å‘
 	 */
 	void SpatialPropagation(const sint32& x, const sint32& y, const sint32& direction) const;
 	
 	/**
-	 * \brief ÊÓÍ¼´«²¥
-	 * \param x ÏñËØx×ø±ê
-	 * \param y ÏñËØy×ø±ê
+	 * @brief è§†å›¾ä¼ æ’­
+	 * @param x åƒç´ xåæ ‡
+	 * @param y åƒç´ yåæ ‡
 	 */
 	void ViewPropagation(const sint32& x, const sint32& y) const;
 	
 	/**
-	 * \brief Æ½ÃæÓÅ»¯
-	 * \param x ÏñËØx×ø±ê
-	 * \param y ÏñËØy×ø±ê
+	 * \brief å¹³é¢ä¼˜åŒ–, ç›¸å½“è€—æ—¶
+	 * \param x åƒç´ xåæ ‡
+	 * \param y åƒç´ yåæ ‡
 	 */
 	void PlaneRefine(const sint32& x, const sint32& y) const;
 private:
-	/** \brief ´ú¼Û¼ÆËãÆ÷ */
+	// ä»£ä»·è®¡ç®—ç±»å¯¹è±¡
 	CostComputer* cost_cpt_left_;
 	CostComputer* cost_cpt_right_;
 
-	/** \brief PMSËã·¨²ÎÊı*/
 	PMSOption option_;
+	// ä¼ æ’­è¿­ä»£æ¬¡æ•°
+	sint32 num_iter_;
 
-	/** \brief Ó°Ïñ¿í¸ß */
 	sint32 width_;  
 	sint32 height_;
 
-	/** \brief ´«²¥µü´ú´ÎÊı */
-	sint32 num_iter_;
-
-	/** \brief Ó°ÏñÊı¾İ */
 	const uint8* img_left_;
 	const uint8* img_right_;
 
-	/** \brief Ìİ¶ÈÊı¾İ */
 	const PGradient* grad_left_;
 	const PGradient* grad_right_;
 
-	/** \brief Æ½ÃæÊı¾İ */
 	DisparityPlane* plane_left_;
 	DisparityPlane* plane_right_;
 
-	/** \brief ´ú¼ÛÊı¾İ	 */
 	float32* cost_left_;
 	float32* cost_right_;
 
-	/** \brief ÊÓ²îÊı¾İ */
 	float32* disparity_map_;
 
-	/** \brief Ëæ»úÊıÉú³ÉÆ÷ */
+	// è§†å·®/æ³•çº¿çš„éšæœºæ•°ç”Ÿæˆå™¨
 	std::uniform_real_distribution<float32>* rand_disp_;
 	std::uniform_real_distribution<float32>* rand_norm_;
 };

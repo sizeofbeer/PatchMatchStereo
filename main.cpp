@@ -5,44 +5,42 @@
 */
 
 #include "stdafx.h"
-#include <iostream>
 #include "PatchMatchStereo.h"
 #include <chrono>
+#include <iostream>
+#include <opencv2/opencv.hpp>
+
 using namespace std::chrono;
 
-// opencv library
-#include <opencv2/opencv.hpp>
-#ifdef _DEBUG
-#pragma comment(lib,"opencv_world310d.lib")
-#else
-#pragma comment(lib,"opencv_world310.lib")
-#endif
 
-/*ÏÔÊ¾ÊÓ²îÍ¼*/
-void ShowDisparityMap(const float32* disp_map, const sint32& width, const sint32& height, const std::string& name);
-/*±£´æÊÓ²îÍ¼*/
-void SaveDisparityMap(const float32* disp_map, const sint32& width, const sint32& height, const std::string& path);
-/*±£´æÊÓ²îµãÔÆ*/
-void SavePointCloud(const uint8* img_bytes, const float32* disp_map, const sint32& width, const sint32& height, const std::string& path);
+// æ˜¾ç¤ºè§†å·®å›¾
+void ShowDisparityMap(const float32* disp_map,
+					  const sint32& width, const sint32& height, const std::string& name);
+// ä¿å­˜è§†å·®å›¾
+void SaveDisparityMap(const float32* disp_map,
+					  const sint32& width, const sint32& height, const std::string& path);
+// ä¿å­˜è§†å·®ç‚¹äº‘, éœ€è¦æ ¹æ®ç›¸æœºå‚æ•°è®¾ç½®ç›¸å…³å‚æ•°å€¼
+void SavePointCloud(const uint8* img_bytes,
+					const float32* disp_map, const sint32& width, const sint32& height, const std::string& path);
+
 
 /**
-* \brief
-* \param argv 3
-* \param argc argc[1]:×óÓ°ÏñÂ·¾¶ argc[2]: ÓÒÓ°ÏñÂ·¾¶ argc[3]: ×îĞ¡ÊÓ²î[¿ÉÑ¡£¬Ä¬ÈÏ0] argc[4]: ×î´óÊÓ²î[¿ÉÑ¡£¬Ä¬ÈÏ64]
-* \param eg. ..\Data\cone\im2.png ..\Data\cone\im6.png 0 64
-* \param eg. ..\Data\Reindeer\view1.png ..\Data\Reindeer\view5.png 0 128
-* \return
-*/
+ * @brief
+ * @param argv 3
+ * @param argc argc[1]: å·¦å›¾åƒè·¯å¾„; argc[2]: å³å›¾åƒè·¯å¾„; argc[3]: æœ€å°è§†å·®[å¯é€‰ï¼Œé»˜è®¤0]; argc[4]: æœ€å¤§è§†å·®[å¯é€‰ï¼Œé»˜è®¤64]
+ * @param eg. ../Data/Cone/im2.png ../Data/Cone/im6.png 0 64
+ * @param eg. ../Data/Reindeer/view1.png ../Data/Reindeer/view5.png 0 128
+ * @return
+ */
 int main(int argv, char** argc)
 {
 	if (argv < 3) {
-		std::cout << "²ÎÊı¹ıÉÙ£¬ÇëÖÁÉÙÖ¸¶¨×óÓÒÓ°ÏñÂ·¾¶£¡" << std::endl;
+		std::cout << "å‚æ•°è¿‡å°‘, è¯·è‡³å°‘æŒ‡å®šå·¦å³å›¾åƒè·¯å¾„!" << std::endl;
 		return -1;
 	}
 
 	printf("Image Loading...");
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
-	// ¶ÁÈ¡Ó°Ïñ
+	// è¯»å–å›¾åƒ
 	std::string path_left = argc[1];
 	std::string path_right = argc[2];
 
@@ -50,20 +48,18 @@ int main(int argv, char** argc)
 	cv::Mat img_right = cv::imread(path_right, cv::IMREAD_COLOR);
 
 	if (img_left.data == nullptr || img_right.data == nullptr) {
-		std::cout << "¶ÁÈ¡Ó°ÏñÊ§°Ü£¡" << std::endl;
+		std::cout << "è¯»å–å›¾åƒå¤±è´¥!" << std::endl;
 		return -1;
 	}
 	if (img_left.rows != img_right.rows || img_left.cols != img_right.cols) {
-		std::cout << "×óÓÒÓ°Ïñ³ß´ç²»Ò»ÖÂ£¡" << std::endl;
+		std::cout << "å·¦å³å›¾åƒå°ºå¯¸ä¸ä¸€è‡´!" << std::endl;
 		return -1;
 	}
 
-
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
 	const sint32 width = static_cast<uint32>(img_left.cols);
 	const sint32 height = static_cast<uint32>(img_right.rows);
 
-	// ×óÓÒÓ°ÏñµÄ²ÊÉ«Êı¾İ
+	// å·¦å³å›¾åƒçš„å½©è‰²æ•°æ®
 	auto bytes_left = new uint8[width * height * 3];
 	auto bytes_right = new uint8[width * height * 3];
 	for (int i = 0; i < height; i++) {
@@ -78,45 +74,39 @@ int main(int argv, char** argc)
 	}
 	printf("Done!\n");
 
-	// PMSÆ¥Åä²ÎÊıÉè¼Æ
-	PMSOption pms_option;
-	// patch´óĞ¡
-	pms_option.patch_size = 35;
-	// ºòÑ¡ÊÓ²î·¶Î§
+	PMSOption pms_option; // PMSåŒ¹é…å‚æ•°
+	pms_option.patch_size = 35; // patchå¤§å°
+
+	// å€™é€‰è§†å·®èŒƒå›´
 	pms_option.min_disparity = argv < 4 ? 0 : atoi(argc[3]);
 	pms_option.max_disparity = argv < 5 ? 64 : atoi(argc[4]);
-	// gamma
-	pms_option.gamma = 10.0f;
-	// alpha
-	pms_option.alpha = 0.9f;
-	// t_col
-	pms_option.tau_col = 10.0f;
-	// t_grad
-	pms_option.tau_grad = 2.0f;
-	// ´«²¥µü´ú´ÎÊı
-	pms_option.num_iters = 3;
+	
+	pms_option.gamma = 10.0f; // gamma
+	pms_option.alpha = 0.9f; // alpha
+	pms_option.tau_col = 10.0f; // t_col
+	pms_option.tau_grad = 2.0f; // t_grad
 
-	// Ò»ÖÂĞÔ¼ì²é
+	pms_option.num_iters = 3; // ä¼ æ’­è¿­ä»£æ¬¡æ•°
+
+	// ä¸€è‡´æ€§æ£€æŸ¥
 	pms_option.is_check_lr = true;
 	pms_option.lrcheck_thres = 1.0f;
-	// ÊÓ²îÍ¼Ìî³ä
+	// è§†å·®å›¾å¡«å……
 	pms_option.is_fill_holes = false;
-
-	// Ç°¶ËÆ½ĞĞ´°¿Ú
+	// å‰ç«¯å¹³è¡Œçª—å£
 	pms_option.is_fource_fpw = false;
-
-	// ÕûÊıÊÓ²î¾«¶È
+	// æ•´æ•°è§†å·®ç²¾åº¦
 	pms_option.is_integer_disp = false;
 
-	// ¶¨ÒåPMSÆ¥ÅäÀàÊµÀı
+	// å®šä¹‰PMSåŒ¹é…ç±»å®ä¾‹
 	PatchMatchStereo pms;
 
 	printf("PatchMatch Initializing...");
 	auto start = std::chrono::steady_clock::now();
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
-	// ³õÊ¼»¯
+
+	// åˆå§‹åŒ–
 	if (!pms.Initialize(width, height, pms_option)) {
-		std::cout << "PMS³õÊ¼»¯Ê§°Ü£¡" << std::endl;
+		std::cout << "PMSåˆå§‹åŒ–å¤±è´¥!" << std::endl;
 		return -2;
 	}
 	auto end = std::chrono::steady_clock::now();
@@ -125,12 +115,10 @@ int main(int argv, char** argc)
 
 	printf("PatchMatch Matching...");
 	start = std::chrono::steady_clock::now();
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
-	// Æ¥Åä
-	// disparityÊı×é±£´æ×ÓÏñËØµÄÊÓ²î½á¹û
+	// åŒ¹é…, disparityæ•°ç»„ä¿å­˜å­åƒç´ çš„è§†å·®ç»“æœ
 	auto disparity = new float32[uint32(width * height)]();		
 	if (!pms.Match(bytes_left, bytes_right, disparity)) {
-		std::cout << "PMSÆ¥ÅäÊ§°Ü£¡" << std::endl;
+		std::cout << "PMSåŒ¹é…å¤±è´¥!" << std::endl;
 		return -2;
 	}
 	end = std::chrono::steady_clock::now();
@@ -138,7 +126,7 @@ int main(int argv, char** argc)
 	printf("Done! Timing : %lf s\n", tt.count() / 1000.0);
 
 #if 0
-	// ÏÔÊ¾Ìİ¶ÈÍ¼
+	// æ˜¾ç¤ºæ¢¯åº¦å›¾
 	cv::Mat grad_left_x = cv::Mat(height, width, CV_8UC1);
 	auto* grad_map = pms.GetGradientMap(0);
 	if (grad_map) {
@@ -149,7 +137,7 @@ int main(int argv, char** argc)
 			}
 		}
 	}
-	cv::imshow("Ìİ¶ÈÍ¼-×óX", grad_left);
+	cv::imshow("æ¢¯åº¦å›¾-å·¦X", grad_left);
 	cv::Mat grad_left_y = cv::Mat(height, width, CV_8UC1);
 	auto* grad_map = pms.GetGradientMap(0);
 	if (grad_map) {
@@ -160,24 +148,21 @@ int main(int argv, char** argc)
 			}
 		}
 	}
-	cv::imshow("Ìİ¶ÈÍ¼-×óY", grad_left);
+	cv::imshow("æ¢¯åº¦å›¾-å·¦Y", grad_left);
 #endif
 
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
-	// ÏÔÊ¾ÊÓ²îÍ¼
-	ShowDisparityMap(pms.GetDisparityMap(0), width, height, "disp-left");
-	ShowDisparityMap(pms.GetDisparityMap(1), width, height, "disp-right");
-	// ±£´æÊÓ²îÍ¼
+	// æ˜¾ç¤ºè§†å·®å›¾
+	// ShowDisparityMap(pms.GetDisparityMap(0), width, height, "disp-left");
+	// ShowDisparityMap(pms.GetDisparityMap(1), width, height, "disp-right");
+	// cv::waitKey(0);
+	// ä¿å­˜è§†å·®å›¾
 	SaveDisparityMap(pms.GetDisparityMap(0), width, height, path_left);
 	SaveDisparityMap(pms.GetDisparityMap(1), width, height, path_right);
-	// ±£´æµãÔÆ
-	SavePointCloud(bytes_left, pms.GetDisparityMap(0), width, height, path_left);
-	SavePointCloud(bytes_right, pms.GetDisparityMap(1), width, height, path_left);
+	// ä¿å­˜ç‚¹äº‘
+	// SavePointCloud(bytes_left, pms.GetDisparityMap(0), width, height, path_left);
+	// SavePointCloud(bytes_right, pms.GetDisparityMap(1), width, height, path_left);
 
-	cv::waitKey(0);
-
-	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
-	// ÊÍ·ÅÄÚ´æ
+	// é‡Šæ”¾å†…å­˜
 	delete[] disparity;
 	disparity = nullptr;
 	delete[] bytes_left;
@@ -185,13 +170,13 @@ int main(int argv, char** argc)
 	delete[] bytes_right;
 	bytes_right = nullptr;
 
-	system("pause");
+	// system("pause");
 	return 0;
 }
 
-void ShowDisparityMap(const float32* disp_map,const sint32& width,const sint32& height, const std::string& name)
+void ShowDisparityMap(const float32* disp_map,
+					  const sint32& width, const sint32& height, const std::string& name)
 {
-	// ÏÔÊ¾ÊÓ²îÍ¼
 	const cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
 	float32 min_disp = float32(width), max_disp = -float32(width);
 	for (sint32 i = 0; i < height; i++) {
@@ -222,9 +207,9 @@ void ShowDisparityMap(const float32* disp_map,const sint32& width,const sint32& 
 
 }
 
-void SaveDisparityMap(const float32* disp_map, const sint32& width, const sint32& height, const std::string& path)
+void SaveDisparityMap(const float32* disp_map,
+					  const sint32& width, const sint32& height, const std::string& path)
 {
-	// ±£´æÊÓ²îÍ¼
 	const cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
 	float32 min_disp = float32(width), max_disp = -float32(width);
 	for (sint32 i = 0; i < height; i++) {
@@ -254,34 +239,35 @@ void SaveDisparityMap(const float32* disp_map, const sint32& width, const sint32
 	cv::imwrite(path + "-c.png", disp_color);
 }
 
-void SavePointCloud(const uint8* img_bytes, const float32* disp_map, const sint32& width, const sint32& height, const std::string& path)
+void SavePointCloud(const uint8* img_bytes, const float32* disp_map,
+					const sint32& width, const sint32& height, const std::string& path)
 {
-	// Çë×¢Òâ£¬²»Í¬Êı¾İ£¬²ÎÊı²»Ò»Ñù£¬ÇëĞŞ¸ÄÏÂÁĞ²ÎÊıÖµ
-	float32 B = 193.001;		// »ùÏß
-	float32 f = 999.421;		// ½¹¾à
-	float32 x0l = 294.182;		// ×óÊÓÍ¼ÏñÖ÷µãx0
-	float32 y0l = 252.932;		// ×óÊÓÍ¼ÏñÖ÷µãy0
-	float32 x0r = 326.95975;	// ÓÒÊÓÍ¼ÏñÖ÷µãx0
+	float32 B = 193.001;		// åŸºçº¿
+	float32 f = 999.421;		// ç„¦è·
+	float32 x0l = 294.182;		// å·¦è§†å›¾åƒä¸»ç‚¹x0
+	float32 y0l = 252.932;		// å·¦è§†å›¾åƒä¸»ç‚¹y0
+	float32 x0r = 326.95975;	// å³è§†å›¾åƒä¸»ç‚¹x0
 
-
-	// ±£´æµãÔÆ
+	// ä¿å­˜ç‚¹äº‘
 	FILE* fp_disp_cloud = nullptr;
 	fopen_s(&fp_disp_cloud, (path + "-cloud.txt").c_str(), "w");
-	if (fp_disp_cloud) {
-		for (sint32 y = 0; y < height; y++) {
-			for (sint32 x = 0; x < width; x++) {
-				const float32 disp = abs(disp_map[y * width + x]);
-				if (disp == Invalid_Float) {
-					continue;
-				}
-				float32 Z = B * f / (disp + (x0r - x0l));
-				float32 X = Z * (x - x0l) / f;
-				float32 Y = Z * (y - y0l) / f;
-				// X Y Z R G B
-				fprintf_s(fp_disp_cloud, "%f %f %f %d %d %d\n", X, Y,
-					Z, img_bytes[y * width * 3 + 3 * x + 2], img_bytes[y * width * 3 + 3 * x + 1], img_bytes[y * width * 3 + 3 * x]);
-			}
+	if (!fp_disp_cloud) return;
+
+	for (sint32 y = 0; y < height; y++) {
+		for (sint32 x = 0; x < width; x++) {
+			const float32 disp = abs(disp_map[y * width + x]);
+			if (disp == Invalid_Float) continue;
+
+			float32 Z = B * f / (disp + (x0r - x0l));
+			float32 X = Z * (x - x0l) / f;
+			float32 Y = Z * (y - y0l) / f;
+			// X Y Z R G B
+			fprintf(fp_disp_cloud, "%f %f %f %d %d %d\n",
+					X, Y, Z,
+					img_bytes[y * width * 3 + 3 * x + 2],
+					img_bytes[y * width * 3 + 3 * x + 1],
+					img_bytes[y * width * 3 + 3 * x]);
 		}
-		fclose(fp_disp_cloud);
 	}
+	fclose(fp_disp_cloud);
 }
