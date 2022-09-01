@@ -10,5 +10,4 @@
 #include <cstring>
 #include <algorithm>
 
-#define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename), (mode)))==NULL
 // TODO: reference additional headers your program requires here

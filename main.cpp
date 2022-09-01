@@ -250,7 +250,7 @@ void SavePointCloud(const uint8* img_bytes, const float32* disp_map,
 
 	// 保存点云
 	FILE* fp_disp_cloud = nullptr;
-	fopen_s(&fp_disp_cloud, (path + "-cloud.txt").c_str(), "w");
+	fp_disp_cloud = fopen((path + "-cloud.txt").c_str(), "w");
 	if (!fp_disp_cloud) return;
 
 	for (sint32 y = 0; y < height; y++) {
